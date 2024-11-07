@@ -4,6 +4,7 @@ export default {
   secretKey: process.env.SECRET_KEY,
   host: process.env.HOST || 'http://0.0.0.0',
   port: process.env.PORT || '3000',
+  phoneNumber: process.env.PHONE_NUMBER,
   deviceName: 'Meu Horário Bot',
   poweredBy: 'Leoon Tech',
   startAllSession: true,
@@ -43,10 +44,7 @@ export default {
     level: 'silly', // Before open a issue, change level to silly and retry a action
     logger: ['console', 'file'],
   },
-  createConfig: {
-    phoneNumber: process.env.PHONE_NUMBER,
-    logQR: false,
-  },
+  logQR: false,
   createOptions: {
     browserArgs: [
       '--disable-web-security',
