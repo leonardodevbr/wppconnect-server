@@ -1,7 +1,7 @@
 import { ServerOptions } from './types/ServerOptions';
 
 export default {
-  secretKey: 'THISISMYSECURETOKEN',
+  secretKey: process.env.SECRET_KEY,
   host: 'http://localhost',
   port: '3000',
   deviceName: 'WppConnect',
@@ -11,7 +11,7 @@ export default {
   maxListeners: 15,
   customUserDataDir: './userDataDir/',
   webhook: {
-    url: 'http://meuhorario.dev.local/api/v1/callback',
+    url: process.env.CALLBACK_URL,
     autoDownload: true,
     uploadS3: false,
     readMessage: true,
@@ -84,11 +84,11 @@ export default {
   db: {
     mongodbDatabase: 'tokens',
     mongodbCollection: 'WppConnect',
-    mongodbUser: '',
-    mongodbPassword: '',
+    mongodbUser: process.env.MONGODB_USERNAME,
+    mongodbPassword: process.env.MONGODB_PASSWORD,
     mongodbHost: 'mongo',
-    mongoIsRemote: false,
-    mongoURLRemote: '',
+    mongoIsRemote: true,
+    mongoURLRemote: process.env.MONGODB_URI,
     mongodbPort: 27017,
     redisHost: 'localhost',
     redisPort: 6379,
