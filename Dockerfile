@@ -1,16 +1,34 @@
-# Use uma imagem oficial do Node.js como base
-FROM node:18
+FROM node:lts-alpine3.18 as base
+WORKDIR /usr/src/wpp-server
+ENV NODE_ENV=production PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+COPY package.json ./
+RUN apk update && \
+    apk add --no-cache \
+    vips-dev \
+    fftw-dev \
+    gcc \
+    g++ \
+    make \
+    libc6-compat \
+    && rm -rf /var/cache/apk/*
+RUN yarn install --production --pure-lockfile && \
+    yarn add sharp --ignore-engines && \
+    yarn cache clean
 
-# Instalar dependências adicionais necessárias para o projeto
-RUN apt-get update && \
-    apt-get install -y libxshmfence-dev libgbm-dev wget unzip fontconfig locales gconf-service \
-    libasound2 libatk1.0-0 libc6 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 \
-    libgcc1 libgconf-2-4 libgdk-pixbuf2.0-0 libglib2.0-0 libgtk-3-0 libnspr4 libpango-1.0-0 \
-    libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 \
-    libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 ca-certificates \
-    fonts-liberation libappindicator1 libnss3 lsb-release xdg-utils && \
-    rm -rf /var/lib/apt/lists/*
-
-# Copiar o código do projeto para o contêiner
-WORKDIR /app
+FROM base as build
+WORKDIR /usr/src/wpp-server
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+COPY package.json  ./
+RUN yarn install --production=false --pure-lockfile
+RUN yarn cache clean
 COPY . .
+RUN yarn build
+
+FROM base
+WORKDIR /usr/src/wpp-server/
+RUN apk add --no-cache chromium
+RUN yarn cache clean
+COPY . .
+COPY --from=build /usr/src/wpp-server/ /usr/src/wpp-server/
+EXPOSE 21465
+ENTRYPOINT ["node", "dist/server.js"]
