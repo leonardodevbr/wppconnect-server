@@ -1,3 +1,6 @@
+# Use uma imagem oficial do Node.js como base
+FROM node:18
+
 # Instalar dependências adicionais necessárias para o projeto
 RUN apt-get update && \
     apt-get install -y libxshmfence-dev libgbm-dev wget unzip fontconfig locales gconf-service \
@@ -7,3 +10,7 @@ RUN apt-get update && \
     libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 ca-certificates \
     fonts-liberation libappindicator1 libnss3 lsb-release xdg-utils && \
     rm -rf /var/lib/apt/lists/*
+
+# Copiar o código do projeto para o contêiner
+WORKDIR /app
+COPY . .
