@@ -44,6 +44,8 @@ export default {
     logger: ['console', 'file'],
   },
   createOptions: {
+    phoneNumber: process.env.PHONE_NUMBER,
+    logQR: false,
     browserArgs: [
       '--disable-web-security',
       '--no-sandbox',
