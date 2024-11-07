@@ -43,9 +43,11 @@ export default {
     level: 'silly', // Before open a issue, change level to silly and retry a action
     logger: ['console', 'file'],
   },
-  createOptions: {
+  createConfig: {
     phoneNumber: process.env.PHONE_NUMBER,
     logQR: false,
+  },
+  createOptions: {
     browserArgs: [
       '--disable-web-security',
       '--no-sandbox',
