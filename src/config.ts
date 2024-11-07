@@ -2,7 +2,7 @@ import { ServerOptions } from './types/ServerOptions';
 
 export default {
   secretKey: process.env.SECRET_KEY,
-  host: '0.0.0.0',
+  host: process.env.HOST || 'http://0.0.0.0',
   port: process.env.PORT || '3000',
   deviceName: 'WppConnect',
   poweredBy: 'WPPConnect-Server',
