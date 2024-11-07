@@ -44,6 +44,7 @@ export default {
     logger: ['console', 'file'],
   },
   createOptions: {
+    protocolTimeout: 60000,
     browserArgs: [
       '--disable-web-security',
       '--no-sandbox',
