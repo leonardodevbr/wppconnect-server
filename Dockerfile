@@ -22,7 +22,7 @@ COPY package.json  ./
 RUN yarn install --production=false --pure-lockfile
 RUN yarn cache clean
 COPY . .
-#RUN yarn build
+RUN yarn build
 
 FROM base
 WORKDIR /usr/src/wpp-server/
