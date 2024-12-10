@@ -3,7 +3,7 @@ WORKDIR /usr/src/wpp-server
 ENV NODE_ENV=production PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 COPY package.json ./
 RUN apk update && \
-    apk add \
+    apk add --no-cache \
     vips-dev \
     fftw-dev \
     gcc \

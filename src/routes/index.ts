@@ -363,7 +363,7 @@ routes.get(
   statusConnection,
   DeviceController.getAllChats
 );
-routes.get(
+routes.post(
   '/api/:session/list-chats',
   verifyToken,
   statusConnection,
