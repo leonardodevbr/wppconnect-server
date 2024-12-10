@@ -498,13 +498,27 @@ export async function sendButtons(req: Request, res: Response) {
      }
      #swagger.deprecated=true
    */
-  const { phone, message, options } = req.body;
+  const {
+    phone,
+    message = null,
+    title,
+    footer = null,
+    dynamic_reply = true,
+    buttons,
+  } = req.body;
 
   try {
     const results: any = [];
 
     for (const contact of phone) {
-      results.push(await req.client.sendText(contact, message, options));
+      results.push(
+        await req.client.sendMessageOptions(contact, message, {
+          title: title,
+          footer: footer,
+          isDynamicReplyButtonsMsg: dynamic_reply,
+          dynamicReplyButtons: buttons,
+        })
+      );
     }
 
     if (results.length === 0)
