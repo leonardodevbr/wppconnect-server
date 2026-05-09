@@ -109,6 +109,8 @@ export default {
      * linkPreviewApiServers: [ 'https://www.yourserver.com/wa-js-api-server' ]
      */
     linkPreviewApiServers: null,
+    autoClose: parseInt(process.env.AUTO_CLOSE_TIMEOUT || '300', 10) * 1000,
+    waitForLogin: false,
   },
   mapper: {
     enable: false,
