@@ -154,6 +154,7 @@ export default class CreateSessionUtil {
       );
 
       client = clientsArray[session] = Object.assign(wppClient, client);
+      console.log('[opendata] client criado, iniciando Puppeteer...');
       await this.start(req, client);
 
       if (req.serverOptions.webhook.onParticipantsChanged) {
@@ -175,6 +176,7 @@ export default class CreateSessionUtil {
         await this.onLabelUpdated(client, req);
       }
     } catch (e) {
+      console.error('[opendata] ERRO:', (e as any)?.message || e);
       req.logger.error(e);
       if (e instanceof Error && e.name == 'TimeoutError') {
         const client = this.getClient(session) as any;
@@ -184,6 +186,7 @@ export default class CreateSessionUtil {
   }
 
   async opendata(req: Request, session: string, res?: any) {
+    console.log('[opendata] iniciando sessão:', session);
     await this.createSessionUtil(req, clientsArray, session, res);
   }
 
