@@ -35,6 +35,7 @@ import * as SessionController from '../controller/sessionController';
 import * as StatusController from '../controller/statusController';
 import { getAllQueues, getQueueStatus, clearQueue, removeMessage } from '../util/messageQueue';
 import { sessionRecoveryManager } from '../util/sessionRecoveryManager';
+import { clientsArray } from '../util/sessionUtil';
 import verifyToken from '../middleware/auth';
 import * as HealthCheck from '../middleware/healthCheck';
 import * as prometheusRegister from '../middleware/instrumentation';
@@ -162,6 +163,33 @@ routes.get('/api/instances', async (req, res) => {
       status: 'error',
       message: 'Erro ao listar instâncias'
     });
+  }
+});
+
+routes.delete('/api/instances/:session', async (req, res) => {
+  try {
+    const { session } = req.params;
+    const Token = require('../util/tokenStore/model/token').default;
+    const deleted = await Token.findOneAndDelete({ sessionName: session });
+    if (!deleted) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Instância não encontrada',
+      });
+    }
+
+    if (clientsArray[session]) {
+      try {
+        await clientsArray[session].close();
+      } catch {
+        /* ignore close errors */
+      }
+      delete clientsArray[session];
+    }
+
+    return res.json({ status: 'success', message: 'Instância excluída' });
+  } catch (e: any) {
+    return res.status(500).json({ status: 'error', message: e.message });
   }
 });
 
