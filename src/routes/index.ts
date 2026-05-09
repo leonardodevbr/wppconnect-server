@@ -35,7 +35,6 @@ import * as SessionController from '../controller/sessionController';
 import * as StatusController from '../controller/statusController';
 import { getAllQueues, getQueueStatus, clearQueue, removeMessage } from '../util/messageQueue';
 import { sessionRecoveryManager } from '../util/sessionRecoveryManager';
-import { clientsArray } from '../util/sessionUtil';
 import verifyToken from '../middleware/auth';
 import * as HealthCheck from '../middleware/healthCheck';
 import * as prometheusRegister from '../middleware/instrumentation';
@@ -170,20 +169,11 @@ routes.delete('/api/instances/:session', async (req, res) => {
   try {
     const { session } = req.params;
     const Token = require('../util/tokenStore/model/token').default;
-    const deleted = await Token.findOneAndDelete({ sessionName: session });
-    if (!deleted) {
-      return res.status(404).json({
-        status: 'error',
-        message: 'Instância não encontrada',
-      });
-    }
+    await Token.findOneAndDelete({ sessionName: session });
 
+    const { clientsArray } = require('../util/sessionUtil');
     if (clientsArray[session]) {
-      try {
-        await clientsArray[session].close();
-      } catch {
-        /* ignore close errors */
-      }
+      try { await clientsArray[session].close(); } catch {}
       delete clientsArray[session];
     }
 
@@ -193,18 +183,12 @@ routes.delete('/api/instances/:session', async (req, res) => {
   }
 });
 
-routes.post('/api/:session/start', async (req: any, res: any) => {
-  try {
-    const { session } = req.params;
-    // startSession / opendata usam req.session (antes vinha do verifyToken)
-    req.session = String(session).split(':')[0];
-    req.params.secretkey =
-      req.serverOptions?.secretKey || process.env.SECRET_KEY || '';
-    return SessionController.startSession(req, res);
-  } catch (e: any) {
-    return res.status(500).json({ status: 'error', message: e.message });
-  }
-});
+// Mesmo contrato de POST /start-session: exige Bearer gerado por generate-token
+routes.post(
+  '/api/:session/start',
+  verifyToken,
+  SessionController.startSession
+);
 
 routes.get(
   '/api/:session/qrcode',
@@ -254,6 +238,7 @@ routes.get(
 );
 routes.get(
   '/api/:session/qrcode-session',
+  verifyToken,
   SessionController.getQrCode
 );
 routes.post(
