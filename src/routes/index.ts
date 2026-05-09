@@ -243,10 +243,12 @@ routes.get(
 );
 routes.post(
   '/api/:session/start-session',
-  (req, res, next) => {
+  async (req, res, next) => {
     console.log(
       `[start-session] session=${req.params.session} auth=${req.headers.authorization?.substring(0, 20)}`
     );
+    // Aguardar gravação do token no MongoDB
+    await new Promise(resolve => setTimeout(resolve, 1000));
     next();
   },
   verifyToken,
