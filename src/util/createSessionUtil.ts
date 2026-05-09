@@ -42,8 +42,17 @@ export default class CreateSessionUtil {
   ) {
     try {
       let client = this.getClient(session) as any;
-      if (client.status != null && client.status !== 'CLOSED') return;
+      if (
+        client.status != null &&
+        client.status !== 'CLOSED' &&
+        client.status !== 'INITIALIZING'
+      )
+        return;
       client.status = 'INITIALIZING';
+      console.log(
+        '[createSessionUtil] iniciando Chromium para sessão:',
+        session
+      );
       client.config = req.body;
 
       const tokenStore = new Factory();
