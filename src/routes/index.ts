@@ -243,6 +243,12 @@ routes.get(
 );
 routes.post(
   '/api/:session/start-session',
+  (req, res, next) => {
+    console.log(
+      `[start-session] session=${req.params.session} auth=${req.headers.authorization?.substring(0, 20)}`
+    );
+    next();
+  },
   verifyToken,
   SessionController.startSession
 );
