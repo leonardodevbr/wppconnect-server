@@ -15,7 +15,7 @@ const bcrypt = require('bcrypt');
 async function createAdmin() {
   try {
     // Conectar ao MongoDB
-    await mongoose.connect('mongodb://mongo:27017/wppconnect', {
+    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://admin:admin123@mongodb:27017/wppconnect?authSource=admin', {
       useNewUrlParser: true,
       useUnifiedTopology: true
     });
