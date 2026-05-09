@@ -16,21 +16,28 @@ class MongodbTokenStore {
       return result;
     },
     setToken: async (sessionName: any, tokenData: any) => {
-      const token = new (Token as any)(tokenData);
-      token.sessionName = sessionName;
-      token.webhook = this.client.config.webhook;
-      token.config = JSON.stringify(this.client.config);
+      const updateData = {
+        sessionName,
+        webhook: this.client.config?.webhook || '',
+        config: JSON.stringify(this.client.config || {}),
+        WABrowserId: tokenData?.WABrowserId || undefined,
+        WASecretBundle: tokenData?.WASecretBundle || undefined,
+        WAToken1: tokenData?.WAToken1 || undefined,
+        WAToken2: tokenData?.WAToken2 || undefined,
+      };
 
-      const tk = await (Token as any).findOne({ sessionName });
+      // Remover campos undefined para não sobrescrever com null
+      Object.keys(updateData).forEach((key) =>
+        (updateData as any)[key] === undefined && delete (updateData as any)[key]
+      );
 
-      if (tk) {
-        token._id = tk._id;
-        return (await (Token as any).updateOne({ _id: tk._id }, token))
-          ? true
-          : false;
-      } else {
-        return (await token.save()) ? true : false;
-      }
+      return (await (Token as any).findOneAndUpdate(
+        { sessionName },
+        { $set: updateData },
+        { upsert: true, new: true }
+      ))
+        ? true
+        : false;
     },
     removeToken: async (sessionName: string) => {
       return (await (Token as any).deleteOne({ sessionName })) ? true : false;
