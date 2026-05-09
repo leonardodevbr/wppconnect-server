@@ -13,6 +13,7 @@ const Token =
           webhook: String,
           config: String,
           sessionName: String,
+          token: String,
         })
       )
     : null;

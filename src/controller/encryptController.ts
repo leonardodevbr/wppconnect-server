@@ -16,6 +16,8 @@
 import bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
 
+import Token from '../util/tokenStore/model/token';
+
 const saltRounds = 10;
 
 export async function encryptSession(
@@ -51,8 +53,24 @@ export async function encryptSession(
     });
   }
 
-  bcrypt.hash(session + secureTokenEnv, saltRounds, function (err, hash) {
+  bcrypt.hash(session + secureTokenEnv, saltRounds, async function (err, hash) {
     if (err) return res.status(500).json(err);
+
+    if (Token) {
+      try {
+        await Token.findOneAndUpdate(
+          { sessionName: session },
+          { $set: { token: hash } },
+          { upsert: true, new: true }
+        );
+      } catch (dbErr) {
+        return res.status(500).json({
+          response: false,
+          message: 'Failed to persist token',
+          error: dbErr,
+        });
+      }
+    }
 
     const hashFormat = hash.replace(/\//g, '_').replace(/\+/g, '-');
     return res.status(201).json({
