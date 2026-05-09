@@ -140,28 +140,25 @@ routes.get('/api/:session/config', async (req, res) => {
 routes.get('/api/instances', async (req, res) => {
   try {
     const Token = require('../util/tokenStore/model/token').default;
+    const { clientsArray } = require('../util/sessionUtil');
+
     const instances = await Token.find({}).select('sessionName webhook createdAt');
-    
+
     const instancesWithStatus = instances.map((instance: any) => {
+      const client = clientsArray[instance.sessionName];
+      const status = client?.status || 'DISCONNECTED';
       return {
         name: instance.sessionName,
-        status: 'DISCONNECTED',
+        status: status,
         webhook: instance.webhook || '',
         createdAt: instance.createdAt,
-        isActive: false
+        isActive: status === 'CONNECTED',
       };
     });
-    
-    res.json({
-      status: 'success',
-      data: instancesWithStatus
-    });
-  } catch (error) {
-    console.error('Erro ao listar instâncias:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Erro ao listar instâncias'
-    });
+
+    res.json({ status: 'success', data: instancesWithStatus });
+  } catch (e: any) {
+    res.status(500).json({ status: 'error', message: e.message });
   }
 });
 
