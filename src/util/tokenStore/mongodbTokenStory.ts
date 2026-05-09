@@ -16,28 +16,25 @@ class MongodbTokenStore {
       return result;
     },
     setToken: async (sessionName: any, tokenData: any) => {
-      const updateData = {
+      console.log('[setToken] salvando sessão:', sessionName, 'tokenData keys:', Object.keys(tokenData || {}));
+
+      const updateData: any = {
         sessionName,
         webhook: this.client.config?.webhook || '',
         config: JSON.stringify(this.client.config || {}),
-        WABrowserId: tokenData?.WABrowserId || undefined,
-        WASecretBundle: tokenData?.WASecretBundle || undefined,
-        WAToken1: tokenData?.WAToken1 || undefined,
-        WAToken2: tokenData?.WAToken2 || undefined,
       };
 
-      // Remover campos undefined para não sobrescrever com null
-      Object.keys(updateData).forEach((key) =>
-        (updateData as any)[key] === undefined && delete (updateData as any)[key]
-      );
+      // Salvar todos os campos WAToken que o WPPConnect passar
+      if (tokenData?.WABrowserId) updateData.WABrowserId = tokenData.WABrowserId;
+      if (tokenData?.WASecretBundle) updateData.WASecretBundle = tokenData.WASecretBundle;
+      if (tokenData?.WAToken1) updateData.WAToken1 = tokenData.WAToken1;
+      if (tokenData?.WAToken2) updateData.WAToken2 = tokenData.WAToken2;
 
       return (await (Token as any).findOneAndUpdate(
         { sessionName },
         { $set: updateData },
         { upsert: true, new: true }
-      ))
-        ? true
-        : false;
+      )) ? true : false;
     },
     removeToken: async (sessionName: string) => {
       return (await (Token as any).deleteOne({ sessionName })) ? true : false;
