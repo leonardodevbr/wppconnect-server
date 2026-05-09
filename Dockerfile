@@ -23,6 +23,7 @@ WORKDIR /app
 # Runtime: Chromium/Puppeteer + ferramentas temporárias para compilar bcrypt (node-gyp)
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+ENV CHROME_BIN=/usr/bin/chromium-browser
 
 COPY package*.json ./
 

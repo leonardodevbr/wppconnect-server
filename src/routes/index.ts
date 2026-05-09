@@ -161,69 +161,9 @@ routes.get('/api/instances', async (req, res) => {
   }
 });
 
-// Iniciar instância
-routes.post('/api/:session/start', async (req, res) => {
-  try {
-    const { session } = req.params;
-    const clientsArray = require('../util/sessionUtil').clientsArray;
-    const existingClient = clientsArray[session];
-    
-    // Se a instância já existe e tem QR Code REAL do WPPConnect
-    if (existingClient && existingClient.qrcode) {
-      return res.json({
-        status: 'success',
-        message: 'Instância já iniciada',
-        data: {
-          status: existingClient.status || 'QRCODE',
-          qrcode: existingClient.qrcode, // QR Code REAL do WPPConnect
-          urlcode: existingClient.urlcode
-        }
-      });
-    }
-    
-    // Iniciar a sessão do WPPConnect
-    // Usar a rota de start-session existente para criar a sessão
-    const startSessionRoute = req.app._router.stack.find((layer: any) => 
-      layer.route?.path === '/api/:session/start-session'
-    );
-    
-    if (startSessionRoute) {
-      // Chamar a rota de start-session que vai criar a sessão do WPPConnect
-      await SessionController.startSession(req, res);
-      
-      // Aguardar um pouco para o QR Code ser gerado
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Verificar novamente o QR Code
-      const newClient = clientsArray[session];
-      if (newClient && newClient.qrcode) {
-        return res.json({
-          status: 'success',
-          message: 'Instância iniciada com sucesso',
-          data: {
-            status: newClient.status || 'QRCODE',
-            qrcode: newClient.qrcode, // QR Code REAL do WPPConnect
-            urlcode: newClient.urlcode
-          }
-        });
-      }
-    }
-    
-    // Se chegou aqui, não conseguiu obter QR Code real
-    // Retornar erro em vez de mock
-    console.error(`Não foi possível obter QR Code real para sessão: ${session}`);
-    res.status(500).json({
-      status: 'error',
-      message: 'Não foi possível iniciar a instância. Tente novamente.'
-    });
-  } catch (error: any) {
-    console.error('Erro ao iniciar instância:', error);
-    res.status(500).json({
-      status: 'error',
-      message: error.message || 'Erro ao iniciar instância'
-    });
-  }
-});
+routes.post('/api/:session/start', verifyToken, SessionController.startSession);
+
+routes.get('/api/:session/qrcode', verifyToken, SessionController.getSessionState);
 
 // Parar instância
 routes.post('/api/:session/stop', async (req, res) => {
