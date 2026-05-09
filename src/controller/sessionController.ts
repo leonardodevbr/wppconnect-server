@@ -236,8 +236,29 @@ export async function startSession(req: Request, res: Response): Promise<any> {
   const session = req.session;
   const { waitQrCode = false } = req.body;
 
-  await getSessionState(req, res);
-  await SessionUtil.opendata(req, session, waitQrCode ? res : null);
+  try {
+    // Iniciar a sessão em background — não aguardar
+    SessionUtil.opendata(req, session, null).catch((err: any) => {
+      req.logger?.error(
+        `[startSession] Erro ao abrir sessão ${session}: ${err.message}`
+      );
+    });
+
+    // Responder imediatamente com INITIALIZING
+    return res.status(200).json({
+      status: 'INITIALIZING',
+      qrcode: null,
+      version: version,
+      session: session,
+    });
+  } catch (ex) {
+    req.logger?.error(ex);
+    return res.status(500).json({
+      status: 'error',
+      message: 'Erro ao iniciar sessão',
+      error: ex,
+    });
+  }
 }
 
 export async function closeSession(req: Request, res: Response): Promise<any> {
