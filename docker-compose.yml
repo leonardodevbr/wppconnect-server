@@ -1,0 +1,87 @@
+services:
+  # MongoDB para armazenar tokens e dados das sessões
+  mongodb:
+    image: mongo:7.0
+    container_name: wppconnect-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+      MONGO_INITDB_DATABASE: wppconnect
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - wppconnect-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis para cache e sessões
+  redis:
+    image: redis:7-alpine
+    container_name: wppconnect-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --requirepass redis123
+    volumes:
+      - redis_data:/data
+    networks:
+      - wppconnect-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Aplicação principal
+  wppconnect-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: wppconnect-server
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - SECRET_KEY=THISISMYSECURETOKEN
+      - HOST=http://localhost
+      - PORT=3000
+      - MONGODB_URI=mongodb://admin:admin123@mongodb:27017/wppconnect?authSource=admin
+      - MONGODB_USERNAME=admin
+      - MONGODB_PASSWORD=admin123
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=redis123
+    volumes:
+      - ./src:/app/src
+      - ./uploads:/app/uploads
+      - ./userDataDir:/app/userDataDir
+      - ./WhatsAppImages:/app/WhatsAppImages
+      - ./logs:/app/logs
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - wppconnect-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  mongodb_data:
+  redis_data:
+
+networks:
+  wppconnect-network:
+    driver: bridge

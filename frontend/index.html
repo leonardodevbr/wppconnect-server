@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIGVSA WhatsApp API</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .login-card {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo h1 {
+            color: #667eea;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        
+        .logo p {
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .btn:hover {
+            background: #5a6fd8;
+        }
+        
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #fcc;
+        }
+        
+        .success {
+            background: #efe;
+            color: #363;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #cfc;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .dashboard {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: #667eea;
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+        
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-card h3 {
+            color: #667eea;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .instances-section {
+            margin-top: 30px;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .add-instance-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        
+        .add-instance-btn:hover {
+            background: #218838;
+        }
+        
+        .instances-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .instances-table th {
+            background: #f8f9fa;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #e1e5e9;
+        }
+        
+        .instances-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e1e5e9;
+        }
+        
+        .status-connected {
+            color: #28a745;
+            font-weight: 600;
+        }
+        
+        .status-disconnected {
+            color: #dc3545;
+            font-weight: 600;
+        }
+        
+        .action-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-right: 5px;
+        }
+        
+        .action-btn:hover {
+            background: #5a6fd8;
+        }
+        
+        .action-btn.danger {
+            background: #dc3545;
+        }
+        
+        .action-btn.danger:hover {
+            background: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const axios = window.axios;
+
+        // Configuração da API
+        const API_BASE_URL = 'http://localhost:3000/api';
+        const SECRET_KEY = 'THISISMYSECURETOKEN';
+
+        // Componente de Login
+        function LoginForm({ onLogin }) {
+            const [formData, setFormData] = useState({
+                email: '',
+                password: ''
+            });
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState('');
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setLoading(true);
+                setError('');
+
+                try {
+                    // Simular login (em produção, isso seria uma chamada real)
+                    if (formData.email === 'admin@sigvsa.com' && formData.password === 'admin123') {
+                        const user = {
+                            id: 1,
+                            email: formData.email,
+                            name: 'Administrador SIGVSA'
+                        };
+                        localStorage.setItem('user', JSON.stringify(user));
+                        onLogin(user);
+                    } else {
+                        setError('Email ou senha incorretos');
+                    }
+                } catch (err) {
+                    setError('Erro ao fazer login');
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            return (
+                <div className="login-container">
+                    <div className="login-card">
+                        <div className="logo">
+                            <h1>SIGVSA WhatsApp API</h1>
+                            <p>Plataforma de Integração WhatsApp</p>
+                        </div>
+                        
+                        {error && <div className="error">{error}</div>}
+                        
+                        <form onSubmit={handleSubmit}>
+                            <div className="form-group">
+                                <label>Email</label>
+                                <input
+                                    type="email"
+                                    value={formData.email}
+                                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                                    required
+                                />
+                            </div>
+                            
+                            <div className="form-group">
+                                <label>Senha</label>
+                                <input
+                                    type="password"
+                                    value={formData.password}
+                                    onChange={(e) => setFormData({...formData, password: e.target.value})}
+                                    required
+                                />
+                            </div>
+                            
+                            <button type="submit" className="btn" disabled={loading}>
+                                {loading ? <span className="loading"></span> : 'Entrar'}
+                            </button>
+                        </form>
+                        
+                        <div style={{marginTop: '20px', textAlign: 'center', color: '#666'}}>
+                            <p><strong>Credenciais de teste:</strong></p>
+                            <p>Email: admin@sigvsa.com</p>
+                            <p>Senha: admin123</p>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Componente de Dashboard
+        function Dashboard({ user, onLogout }) {
+            const [instances, setInstances] = useState([]);
+            const [loading, setLoading] = useState(true);
+            const [stats, setStats] = useState({
+                total: 0,
+                connected: 0,
+                disconnected: 0
+            });
+
+            useEffect(() => {
+                loadInstances();
+            }, []);
+
+            const loadInstances = async () => {
+                try {
+                    setLoading(true);
+                    // Simular dados de instâncias
+                    const mockInstances = [
+                        {
+                            id: 'test-session',
+                            name: 'Sessão de Teste',
+                            status: 'connected',
+                            token: '***',
+                            created: '2024-01-15',
+                            messages: { sent: 6, received: 114 }
+                        }
+                    ];
+                    
+                    setInstances(mockInstances);
+                    setStats({
+                        total: mockInstances.length,
+                        connected: mockInstances.filter(i => i.status === 'connected').length,
+                        disconnected: mockInstances.filter(i => i.status === 'disconnected').length
+                    });
+                } catch (error) {
+                    console.error('Erro ao carregar instâncias:', error);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const createInstance = async () => {
+                const instanceName = prompt('Nome da instância:');
+                if (!instanceName) return;
+
+                try {
+                    // Gerar token para nova instância
+                    const response = await axios.post(`${API_BASE_URL}/${instanceName}/${SECRET_KEY}/generate-token`);
+                    
+                    const newInstance = {
+                        id: instanceName,
+                        name: instanceName,
+                        status: 'disconnected',
+                        token: response.data.token,
+                        created: new Date().toISOString().split('T')[0],
+                        messages: { sent: 0, received: 0 }
+                    };
+                    
+                    setInstances([...instances, newInstance]);
+                    setStats(prev => ({
+                        ...prev,
+                        total: prev.total + 1,
+                        disconnected: prev.disconnected + 1
+                    }));
+                    
+                    alert(`Instância criada!\nToken: ${response.data.token}`);
+                } catch (error) {
+                    alert('Erro ao criar instância: ' + error.message);
+                }
+            };
+
+            const startInstance = async (instanceId) => {
+                try {
+                    const instance = instances.find(i => i.id === instanceId);
+                    const response = await axios.post(`${API_BASE_URL}/${instanceId}/start-session`, {}, {
+                        headers: {
+                            'Authorization': `Bearer ${instance.token}`
+                        }
+                    });
+                    
+                    // Atualizar status
+                    setInstances(instances.map(i => 
+                        i.id === instanceId ? { ...i, status: 'connected' } : i
+                    ));
+                    
+                    setStats(prev => ({
+                        ...prev,
+                        connected: prev.connected + 1,
+                        disconnected: prev.disconnected - 1
+                    }));
+                    
+                    alert('Instância iniciada com sucesso!');
+                } catch (error) {
+                    alert('Erro ao iniciar instância: ' + error.message);
+                }
+            };
+
+            const stopInstance = async (instanceId) => {
+                try {
+                    const instance = instances.find(i => i.id === instanceId);
+                    await axios.post(`${API_BASE_URL}/${instanceId}/close-session`, {}, {
+                        headers: {
+                            'Authorization': `Bearer ${instance.token}`
+                        }
+                    });
+                    
+                    // Atualizar status
+                    setInstances(instances.map(i => 
+                        i.id === instanceId ? { ...i, status: 'disconnected' } : i
+                    ));
+                    
+                    setStats(prev => ({
+                        ...prev,
+                        connected: prev.connected - 1,
+                        disconnected: prev.disconnected + 1
+                    }));
+                    
+                    alert('Instância parada com sucesso!');
+                } catch (error) {
+                    alert('Erro ao parar instância: ' + error.message);
+                }
+            };
+
+            return (
+                <div className="container">
+                    <div className="dashboard">
+                        <div className="header">
+                            <h1>Dashboard SIGVSA WhatsApp API</h1>
+                            <div className="user-info">
+                                <div className="user-avatar">
+                                    {user.name.charAt(0).toUpperCase()}
+                                </div>
+                                <span>{user.name}</span>
+                                <button className="logout-btn" onClick={onLogout}>
+                                    Sair
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div className="content">
+                            <div className="stats-grid">
+                                <div className="stat-card">
+                                    <h3>{stats.total}</h3>
+                                    <p>Total de Instâncias</p>
+                                </div>
+                                <div className="stat-card">
+                                    <h3>{stats.connected}</h3>
+                                    <p>Conectadas</p>
+                                </div>
+                                <div className="stat-card">
+                                    <h3>{stats.disconnected}</h3>
+                                    <p>Desconectadas</p>
+                                </div>
+                            </div>
+                            
+                            <div className="instances-section">
+                                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                                    <h2 className="section-title">Instâncias WhatsApp</h2>
+                                    <button className="add-instance-btn" onClick={createInstance}>
+                                        + Nova Instância
+                                    </button>
+                                </div>
+                                
+                                {loading ? (
+                                    <div style={{textAlign: 'center', padding: '40px'}}>
+                                        <span className="loading"></span>
+                                        <p style={{marginTop: '10px'}}>Carregando instâncias...</p>
+                                    </div>
+                                ) : (
+                                    <table className="instances-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Nome</th>
+                                                <th>Status</th>
+                                                <th>Token</th>
+                                                <th>Criado em</th>
+                                                <th>Mensagens</th>
+                                                <th>Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {instances.map(instance => (
+                                                <tr key={instance.id}>
+                                                    <td>{instance.name}</td>
+                                                    <td>
+                                                        <span className={`status-${instance.status}`}>
+                                                            {instance.status === 'connected' ? 'Conectada' : 'Desconectada'}
+                                                        </span>
+                                                    </td>
+                                                    <td>{instance.token.substring(0, 10)}...</td>
+                                                    <td>{instance.created}</td>
+                                                    <td>
+                                                        Enviadas: {instance.messages.sent}<br/>
+                                                        Recebidas: {instance.messages.received}
+                                                    </td>
+                                                    <td>
+                                                        {instance.status === 'connected' ? (
+                                                            <button 
+                                                                className="action-btn danger"
+                                                                onClick={() => stopInstance(instance.id)}
+                                                            >
+                                                                Parar
+                                                            </button>
+                                                        ) : (
+                                                            <button 
+                                                                className="action-btn"
+                                                                onClick={() => startInstance(instance.id)}
+                                                            >
+                                                                Iniciar
+                                                            </button>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Componente principal
+        function App() {
+            const [user, setUser] = useState(null);
+
+            useEffect(() => {
+                // Verificar se há usuário logado
+                const savedUser = localStorage.getItem('user');
+                if (savedUser) {
+                    setUser(JSON.parse(savedUser));
+                }
+            }, []);
+
+            const handleLogin = (userData) => {
+                setUser(userData);
+            };
+
+            const handleLogout = () => {
+                localStorage.removeItem('user');
+                setUser(null);
+            };
+
+            return (
+                <div>
+                    {user ? (
+                        <Dashboard user={user} onLogout={handleLogout} />
+                    ) : (
+                        <LoginForm onLogin={handleLogin} />
+                    )}
+                </div>
+            );
+        }
+
+        // Renderizar a aplicação
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
