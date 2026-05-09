@@ -101,7 +101,7 @@ export const createInstance = async (req: Request, res: Response) => {
     await tokenData.save();
 
     // Criar cliente WhatsApp para a nova instância
-    const client = await createSessionUtil.startSession(req, instanceName, {
+    const client = await (createSessionUtil as any).startSession(req, instanceName, {
       session: instanceName,
       webhook: webhook || '',
       waitQrCode: true
@@ -254,7 +254,7 @@ export const startInstance = async (req: Request, res: Response) => {
     }
 
     // Iniciar nova sessão
-    const client = await createSessionUtil.startSession(req, session, {
+    const client = await (createSessionUtil as any).startSession(req, session, {
       session: session,
       webhook: tokenData.webhook,
       waitQrCode: true
