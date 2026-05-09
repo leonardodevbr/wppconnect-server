@@ -24,8 +24,6 @@ import * as CommunityController from '../controller/communityController';
 import * as DeviceController from '../controller/deviceController';
 import { encryptSession } from '../controller/encryptController';
 import { getInstanceConfig, saveInstanceConfig, setInstanceWebhook } from '../controller/instanceConfigController';
-import { verifyTokenManually } from '../middleware/instanceAuth';
-import { createInstance, getInstanceQrCode, startInstance, stopInstance, listInstances } from '../controller/instanceManagementController';
 import { login, register, getMe } from '../controller/authController';
 import * as GroupController from '../controller/groupController';
 import * as LabelsController from '../controller/labelsController';
@@ -54,12 +52,31 @@ routes.get('/api/auth/me', getMe);
 // Generate Token
 routes.post('/api/:session/:secretkey/generate-token', encryptSession);
 
-// Instance Management Routes (comentadas temporariamente para evitar dependências circulares)
-// routes.post('/api/create-instance', createInstance);
-// routes.get('/api/instances', listInstances);
-// routes.get('/api/:session/qrcode', verifyTokenManually, getInstanceQrCode);
-// routes.post('/api/:session/start', verifyTokenManually, startInstance);
-// routes.post('/api/:session/stop', verifyTokenManually, stopInstance);
+routes.post('/api/create-instance', async (req, res) => {
+  try {
+    const { name, webhook } = req.body;
+    if (!name)
+      return res
+        .status(400)
+        .json({ error: 'Nome da instância obrigatório' });
+
+    const Token = require('../util/tokenStore/model/token').default;
+    if (!Token) {
+      return res.status(500).json({
+        error: 'MongoDB token store não está ativo',
+      });
+    }
+    const existing = await Token.findOne({ sessionName: name });
+    if (existing)
+      return res.status(409).json({ error: 'Instância já existe' });
+
+    await Token.create({ sessionName: name, webhook: webhook || '' });
+
+    return res.json({ success: true, session: name });
+  } catch (e: any) {
+    return res.status(500).json({ error: e.message });
+  }
+});
 
 // Rotas simples para webhook (sem dependências circulares)
 routes.post('/api/:session/webhook', async (req, res) => {
