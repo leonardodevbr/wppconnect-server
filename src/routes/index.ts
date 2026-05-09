@@ -162,6 +162,34 @@ routes.get('/api/instances', async (req, res) => {
   }
 });
 
+routes.get('/api/instances/:session/status', async (req, res) => {
+  try {
+    const { session } = req.params;
+    const { clientsArray } = require('../util/sessionUtil');
+    const client = clientsArray[session];
+
+    if (!client) {
+      return res.json({ status: 'success', data: { status: 'DISCONNECTED', connected: false } });
+    }
+
+    // Verificar conexão real
+    let connected = false;
+    try {
+      connected = await client.isConnected();
+    } catch {}
+
+    return res.json({
+      status: 'success',
+      data: {
+        status: connected ? 'CONNECTED' : (client.status || 'DISCONNECTED'),
+        connected,
+      }
+    });
+  } catch (e: any) {
+    res.status(500).json({ status: 'error', message: e.message });
+  }
+});
+
 routes.delete('/api/instances/:session', async (req, res) => {
   try {
     const { session } = req.params;
