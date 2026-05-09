@@ -20,22 +20,22 @@ FROM node:22-alpine AS runner
 
 WORKDIR /app
 
-# Dependências de sistema necessárias em runtime para Chromium/Puppeteer
+# Runtime: Chromium/Puppeteer + ferramentas temporárias para compilar bcrypt (node-gyp)
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+
+COPY package*.json ./
+
 RUN apk add --no-cache \
     chromium \
     nss \
     freetype \
     harfbuzz \
     ca-certificates \
-    ttf-freefont
-
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
-
-COPY package*.json ./
-
-# Apenas dependências de produção, sem conflitos de peer deps
-RUN npm ci --omit=dev --legacy-peer-deps --ignore-scripts
+    ttf-freefont \
+  && apk add --no-cache --virtual .build-deps python3 make g++ \
+  && npm ci --omit=dev --legacy-peer-deps \
+  && apk del .build-deps
 
 # Copiar build compilado
 COPY --from=builder /app/dist ./dist
