@@ -44,6 +44,10 @@ import swaggerDocument from '../swagger.json';
 const upload = multer(uploadConfig as any) as any;
 const routes: Router = Router();
 
+Object.assign(SessionController as any, {
+  showStatusSession: SessionController.getSessionState,
+});
+
 // Rotas de Autenticação
 routes.post('/api/auth/login', login);
 routes.post('/api/auth/register', register);
@@ -161,9 +165,23 @@ routes.get('/api/instances', async (req, res) => {
   }
 });
 
-routes.post('/api/:session/start', verifyToken, SessionController.startSession);
+routes.post('/api/:session/start', async (req: any, res: any) => {
+  try {
+    const { session } = req.params;
+    // startSession / opendata usam req.session (antes vinha do verifyToken)
+    req.session = String(session).split(':')[0];
+    req.params.secretkey =
+      req.serverOptions?.secretKey || process.env.SECRET_KEY || '';
+    return SessionController.startSession(req, res);
+  } catch (e: any) {
+    return res.status(500).json({ status: 'error', message: e.message });
+  }
+});
 
-routes.get('/api/:session/qrcode', verifyToken, SessionController.getSessionState);
+routes.get(
+  '/api/:session/qrcode',
+  (SessionController as any).showStatusSession
+);
 
 // Parar instância
 routes.post('/api/:session/stop', async (req, res) => {
@@ -181,15 +199,6 @@ routes.post('/api/:session/stop', async (req, res) => {
       message: error.message || 'Erro ao parar instância'
     });
   }
-});
-
-// QR Code - DEPRECATED: Use /qrcode-session para QR Code real do WPPConnect
-// Esta rota está mantida apenas para compatibilidade, mas retorna erro explicativo
-routes.get('/api/:session/qrcode', async (req, res) => {
-  res.status(400).json({
-    status: 'error',
-    message: 'Use /api/:session/qrcode-session para obter QR Code real do WPPConnect'
-  });
 });
 
 // All Sessions
