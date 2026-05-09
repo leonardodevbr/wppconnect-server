@@ -10,7 +10,7 @@ class MongodbTokenStore {
       let result = await (Token as any).findOne({ sessionName });
       if (result === null) return result;
       result = JSON.parse(JSON.stringify(result));
-      result.config = JSON.parse(result.config);
+      result.config = result.config ? JSON.parse(result.config) : {};
       result.config.webhook = result.webhook;
       this.client.config = result.config;
       return result;
