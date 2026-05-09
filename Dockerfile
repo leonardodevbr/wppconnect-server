@@ -1,42 +1,45 @@
-# Etapa 1: builder — instala todas as dependências (inclui dev) e compila
+# ── Etapa 1: builder ──────────────────────────────────────
 FROM node:22-alpine AS builder
+
 WORKDIR /app
 
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-
-RUN apk add --no-cache python3 make g++ libc6-compat
+# Instalar dependências de sistema para compilar módulos nativos (bcrypt, etc.)
+RUN apk add --no-cache python3 make g++
 
 COPY package*.json ./
-RUN npm ci --ignore-scripts
+
+# --legacy-peer-deps resolve conflito entre @typescript-eslint v7 e v8
+RUN npm ci --legacy-peer-deps --ignore-scripts
 
 COPY . .
+
 RUN npm run build
 
-# Etapa 2: runner — apenas dependências de produção
+# ── Etapa 2: runner ───────────────────────────────────────
 FROM node:22-alpine AS runner
+
 WORKDIR /app
 
-ENV NODE_ENV=production
-ENV PORT=3000
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
-
+# Dependências de sistema necessárias em runtime para Chromium/Puppeteer
 RUN apk add --no-cache \
     chromium \
     nss \
     freetype \
     harfbuzz \
     ca-certificates \
-    ttf-freefont \
-    vips-dev \
-    fftw-dev
+    ttf-freefont
+
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 COPY package*.json ./
-RUN npm ci --omit=dev --ignore-scripts
-RUN npm install mongoose redis crypto-js --omit=dev --ignore-scripts
 
+# Apenas dependências de produção, sem conflitos de peer deps
+RUN npm ci --omit=dev --legacy-peer-deps --ignore-scripts
+
+# Copiar build compilado
 COPY --from=builder /app/dist ./dist
 
 EXPOSE 3000
 
-CMD ["npm", "start"]
+CMD ["node", "dist/server.js"]
