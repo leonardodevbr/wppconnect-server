@@ -26,6 +26,7 @@ ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 COPY package*.json ./
 
+# npm ci com scripts executa prepare (husky), mas husky não existe com --omit=dev — usar ignore-scripts + npm rebuild bcrypt
 RUN apk add --no-cache \
     chromium \
     nss \
@@ -34,7 +35,8 @@ RUN apk add --no-cache \
     ca-certificates \
     ttf-freefont \
   && apk add --no-cache --virtual .build-deps python3 make g++ \
-  && npm ci --omit=dev --legacy-peer-deps \
+  && npm ci --omit=dev --legacy-peer-deps --ignore-scripts \
+  && npm rebuild bcrypt \
   && apk del .build-deps
 
 # Copiar build compilado
