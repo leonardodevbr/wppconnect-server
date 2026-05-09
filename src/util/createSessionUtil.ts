@@ -392,7 +392,16 @@ export default class CreateSessionUtil {
   }
 
   decodeFunction(text: any, client: any) {
-    const object = JSON.parse(text);
+    console.log('[createSessionUtil.decodeFunction] JSON.parse', {
+      hasText: !!text,
+      type: typeof text,
+    });
+    let object: any = {};
+    try {
+      object = text ? JSON.parse(text) : {};
+    } catch {
+      object = {};
+    }
     if (object.webhook && !client.webhook) client.webhook = object.webhook;
     delete object.webhook;
     return object;
