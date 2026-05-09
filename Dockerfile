@@ -1,4 +1,4 @@
-# Build stage — inclui devDependencies para compilar TypeScript / Babel
+# Etapa 1: builder — instala todas as dependências (inclui dev) e compila
 FROM node:22-alpine AS builder
 WORKDIR /app
 
@@ -6,14 +6,13 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 
 RUN apk add --no-cache python3 make g++ libc6-compat
 
-COPY package.json package-lock.json ./
+COPY package*.json ./
 RUN npm ci --ignore-scripts
 
 COPY . .
-# `npm run build` inclui `tsc`, que falha neste fork por erros de tipo nos controllers; o artefato em runtime vem do Babel.
-RUN npm run build:js
+RUN npm run build
 
-# Runtime — apenas dependências de produção
+# Etapa 2: runner — apenas dependências de produção
 FROM node:22-alpine AS runner
 WORKDIR /app
 
@@ -32,7 +31,7 @@ RUN apk add --no-cache \
     vips-dev \
     fftw-dev
 
-COPY package.json package-lock.json ./
+COPY package*.json ./
 RUN npm ci --omit=dev --ignore-scripts
 RUN npm install mongoose redis crypto-js --omit=dev --ignore-scripts
 
