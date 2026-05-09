@@ -49,7 +49,13 @@ export default {
     onRevokedMessage: false,
     onLabelUpdated: false,
     onSelfMessage: true,
-    ignore: ['status@broadcast'],
+    ignore: [
+      'status@broadcast',
+      'qrcode',
+      'status-find', 
+      'onpresencechanged',
+      'incomingcall',
+    ],
   },
   websocket: {
     autoDownload: false,
