@@ -23,6 +23,12 @@ function formatSession(session: string) {
 }
 
 const verifyToken = (req: Request, res: Response, next: NextFunction): any => {
+  console.log(
+    '[verifyToken] session:',
+    req.params?.session,
+    'token recebido:',
+    req.headers.authorization?.substring(0, 30)
+  );
   const secureToken = req.serverOptions.secretKey;
 
   const { session } = req.params;
@@ -67,8 +73,14 @@ const verifyToken = (req: Request, res: Response, next: NextFunction): any => {
     bcrypt.compare(
       sessionDecrypt + secureToken,
       tokenDecrypt,
-      function (err, result) {
-        if (result) {
+      function (err, match) {
+        console.log(
+          '[verifyToken] token no banco:',
+          tokenDecrypt?.substring(0, 20),
+          'match:',
+          match
+        );
+        if (match) {
           req.session = formatSession(req.params.session);
           req.token = tokenDecrypt;
           req.client = clientsArray[req.session];
