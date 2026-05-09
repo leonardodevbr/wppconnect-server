@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { clientsArray } from '../util/sessionUtil';
-import { CreateSessionUtil } from '../util/createSessionUtil';
+import CreateSessionUtil from '../util/createSessionUtil';
 import Token from '../util/tokenStore/model/token';
 import bcrypt from 'bcrypt';
 
@@ -373,7 +373,7 @@ export const listInstances = async (req: Request, res: Response) => {
       const client = clientsArray[instance.sessionName];
       return {
         name: instance.sessionName,
-        status: client ? client.status : 'DISCONNECTED',
+        status: client ? (client as any).status : 'DISCONNECTED',
         webhook: instance.webhook || '',
         createdAt: instance.createdAt,
         isActive: !!client

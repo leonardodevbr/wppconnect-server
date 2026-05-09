@@ -17,7 +17,7 @@ export class SessionRecoveryManager {
   }
 
   private async checkAndRecoverSessions() {
-    for (const [sessionName, client] of clientsArray) {
+    for (const [sessionName, client] of Object.entries(clientsArray as any)) {
       try {
         const isConnected = await client.isConnected();
         

@@ -496,7 +496,7 @@ export async function getSessionState(req: Request, res: Response) {
     const { waitQrCode = false } = req.body;
     const client = req.client;
     // Usar QR Code REAL do WPPConnect, não gerar mock
-    const qr = client?.qrcode || null;
+    const qr = (client as any)?.qrcode || null;
 
     if ((client == null || client.status == null) && !waitQrCode)
       res.status(200).json({ status: 'CLOSED', qrcode: null });
@@ -531,10 +531,10 @@ export async function getQrCode(req: Request, res: Response) {
    */
   try {
     // Usar QR Code REAL do WPPConnect, não gerar mock
-    if (req?.client?.qrcode) {
+    if ((req?.client as any)?.qrcode) {
       // QR Code REAL está em base64, converter para PNG
       const img = Buffer.from(
-        req.client.qrcode.replace(/^data:image\/(png|jpeg|jpg);base64,/, ''),
+        (req.client as any).qrcode.replace(/^data:image\/(png|jpeg|jpg);base64,/, ''),
         'base64'
       );
       res.writeHead(200, {

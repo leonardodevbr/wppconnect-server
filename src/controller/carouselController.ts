@@ -302,7 +302,7 @@ export async function sendCarouselWithImages(req: Request, res: Response): Promi
             contact,
             card.imageBase64,
             message,
-            {
+            ({
               title: card.title,
               footer: i === cards.length - 1 ? footerText : undefined,
               isDynamicReplyButtonsMsg: true,
@@ -310,7 +310,7 @@ export async function sendCarouselWithImages(req: Request, res: Response): Promi
                 id: btn.id,
                 text: btn.text
               }))
-            }
+            } as any)
           );
           results.push(result);
         } else {
